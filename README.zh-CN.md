@@ -1,121 +1,80 @@
-# HarborDesk · 可以核对来源的客服工作台
+# 带来源与人工交接的客服助手
 
-[English](README.md) · [逐题评测结果](docs/evaluation-results.json) · [参考说明](docs/references.md)
+面向需要反复查产品文档的小型软件客服团队。粘贴客户的问题，查看草稿和引用，逐条核对后复制回复；资料不足时，把问题和已有线索留在本地工单中。
 
-小型 B2B 软件公司的客服经常需要翻文档回答客户，遇到没有写清楚的政策容易误答。**HarborDesk 接收问题，返回带文档版本和原文的检索结果；资料不足或冲突时，生成可由人工处理的本地工单。** 编辑人员更新政策后，下一次检索立即使用新版本。
+[查看 35 秒检索与交接演示](docs/demo.webm) · [English](README.md) · [实际验证情况](docs/validation.md)
 
-**这是合成资料的个人演示，不是付费客户项目。** HarborDesk 为虚构公司。默认已实现的是**检索、原文引文和人工交接**，不调用大语言模型，不冒充生成式回答。可选本地 Ollama 接口完成传输模拟测试，**尚未验证真实模型**。
+问题 → 查资料 → 写草稿 → 人工核对 → 复制或交接。
 
-![真实运行：问题、原文与版本](docs/screenshots/01-evidence.jpg)
+这是虚构公司、合成政策的个人项目。无需模型即可作为文档检索工具使用。DeepSeek 接口适配和审核流程已用模拟 HTTP 响应验证，尚未实测真实模型回答。程序不会发送客户消息，也不能操作客户账号。
 
-## 五分钟启动
+![问题与来源](docs/screenshots/01-evidence.jpg)
 
-Python 3.11+，本次在 Windows / Python 3.14 实测。默认无需密钥、Docker、向量库或下载模型。
+## 本地启动
+
+需要 Python 3.11 或更新版本；实际验证环境为 Windows / Python 3.14。
 
 ~~~bash
 git clone https://github.com/myp81607-dot/support-assistant-with-citations.git
 cd support-assistant-with-citations
 python -m venv .venv
-# macOS / Linux:
-source .venv/bin/activate
-# Windows PowerShell 改用：
-# .venv\Scripts\Activate.ps1
+~~~
+
+PowerShell 使用 `.venv\Scripts\Activate.ps1` 激活环境，macOS/Linux 使用 `source .venv/bin/activate`。接着执行：
+
+~~~bash
 python -m pip install -r requirements-app.txt
 python -m uvicorn support_app.main:create_app --factory --host 127.0.0.1 --port 8123
 ~~~
 
-打开 **http://127.0.0.1:8123**。首次启动向 `runtime/support.db` 写入 13 篇合成文档，后续修改和工单持续保留。通过 `SUPPORT_DB` 指定新文件可启动另一份独立演示，不会重新覆盖已有数据库。
+打开 [localhost:8123](http://127.0.0.1:8123)。默认不需要密钥，载入 13 篇 HarborDesk 演示文档，编辑和工单保存在 `runtime/support.db`。
 
-| 输入或操作 | 可核对结果 |
-| --- | --- |
-| How do I rotate an API key? | 轮换密钥的原文与 `api-keys@v1#p1` 来源。 |
-| How do I export data and close my workspace? | 导出与关闭工作区两份资料。 |
-| Can I get a refund after 30 days? | 资料覆盖不足，交给人工，不编造退款政策。 |
-| What is the data retention period? | 故意设置的 30 天 / 90 天政策冲突。 |
-| Knowledge → API rate limits | 正文与政策值中的 **100** 改成 **200 requests per minute**，保存后重新提问，引用变成 `api-limits@v2#p1`。 |
+可以先问 “How long do export download links last?”，再问 “Can I export tickets as a JSON archive?”。前者有 24 小时的依据，后者没有 JSON 功能资料，需要人工处理。问 “Is customer data retained for 30 days or 90 days?” 会显示故意设置的政策冲突。
 
-在 **Handoff queue** 中填写调查说明、改为 In progress，最后填写处理结果并标为 Resolved。不会发邮件或写 CRM。对同一条查询重复创建工单会返回同一工单；旧工单保留当时的来源版本。
+启用回答模式后，逐个打开引用，比较草稿断言与引文。引用 ID 有效不等于内容支持该断言。操作者需确认已经核对、填写备注，才能使用 **Copy approved reply**。引用文档更新或出现相关政策标签冲突后，旧草稿不能继续复制，需协调资料并重新提问审核。
 
-![真实运行：冲突需要人工判断](docs/screenshots/02-conflict.jpg)
+## 换成自己的资料
 
-![真实运行：本地工单及处理记录](docs/screenshots/03-handoff.jpg)
+先复制 [examples/documents.json](examples/documents.json)，替换成有权使用的材料，并单独创建一个数据库：
 
-## 工作原理
-
-~~~mermaid
-flowchart LR
-    Q[用户问题] --> R[检索当前文档段落]
-    D[SQLite 文档版本] --> R
-    R --> G{覆盖度与政策标签检查}
-    G --> E[可核对的原文摘录]
-    G --> H[人工复核]
-    E --> H
-    H --> T[本地工单与处理说明]
-    R -. 可选 .-> M[本地 Ollama 选择引文]
-    M --> V[原文及来源 ID 精确校验]
-    V --> E
-    V --> H
+~~~powershell
+$env:SUPPORT_DOCUMENTS = 'examples/documents.json'
+$env:SUPPORT_DB = 'runtime/my-support.db'
+python -m uvicorn support_app.main:create_app --factory --host 127.0.0.1 --port 8123
 ~~~
 
-- **可解释检索：** 英文词元、少量显式归一化、逆文档频率加权、最多四个初始段落候选及覆盖度门槛。知识库未出现的词会触发人工复核。分数不是准确率或置信概率，检索与模型输出在 UI 中分开。
-- **来源可核对：** 文档 ID、版本、段落及原文。默认不产生回答断言；可选模型只能返回与被引用的完整段落完全一致的文本，否则不显示。这只证明引文一致，不能证明完整回答了问题。
-- **人工交接：** 资料不足、标签政策冲突、可识别指令攻击和模型错误均有明确状态。任何检索都可交给人工，SQLite 保存问题、原因、来源、状态及备注。
-- **版本更新：** 追加版本，只检索每篇文档的最新版，保留历史。保存时检查旧版本号，避免无提示覆盖其他编辑。无需维护另一个向量索引。
-- **模型边界：** 仅连接本地 Ollama HTTP，无工具执行能力，限制输出 token、超时和每个进程的调用次数。默认调用为零。
+这个样例只有两篇文档，导出链接的有效期是 48 小时，不会混入 HarborDesk 资料。JSON 只在数据库没有文档时导入；之后在 **Documents** 中新增正文或保存版本。修改 JSON 文件不会覆盖已存在的数据库。
 
-范围为一个业务场景、一个文档集合的小型助手，或已有 RAG 系统的来源与交接流程改进，不能承诺替代客服团队。
+每条记录放一篇短文，保留稳定的 `id`、清楚的 `title` 和原始 `text`。可选的 `fact_key` / `fact_value` 用于标记应一致的政策，例如两篇文档都用 `export_link_validity`，但时间不同，就会提示冲突。它依赖编辑维护，不是通用语义矛盾检测。
 
-## 验证与复现
+[配置与使用说明](docs/usage.md)给出完整文件格式、错误处理和具体定制入口。
+
+## 启用回答草稿
+
+本版本按 DeepSeek 的 chat-completions 接口配置。密钥放在服务端环境变量中，不放浏览器或提交到仓库：
+
+~~~powershell
+$env:SUPPORT_API_KEY = '<your API key>'
+$env:SUPPORT_MODEL = 'deepseek-flash'
+$env:SUPPORT_API_BASE = 'https://api.deepseek.com'
+$env:MODEL_MAX_CALLS = '10'
+~~~
+
+然后按前文启动服务。API 调用可能计费；程序关闭 thinking，限制输出为 1,200 token，限制请求大小，不自动重试。取消 `SUPPORT_MODEL` 即回到纯检索。旧版只选择整段原文的模型接口已改成简洁的带引用草稿，无需模型的 evidence 基线仍保留。
+
+模型不可用、额度或限流、输出格式错误、无效引用、引文不在资料中时，都不会显示为已解决。已有检索结果和人工交接入口仍可使用。模型没有外部工具执行权限。
+
+## 测试及适用范围
 
 ~~~bash
 python -m pytest -q
 python -m evaluation.run
 ~~~
 
-评测使用新临时数据库，写入[逐题结果](docs/evaluation-results.json)，标签见 [evaluation/questions.json](evaluation/questions.json)。题目在首版实现后由独立 agent 编写，最初包含留出子集；后来已查看其中失败并修复代码，最终结果不再是盲测估计。这些标签未经领域专家确认，不是生产基准。
+保留原 29 题及原标签。六个旧改写失败通过显式词汇规则修复，并新增支持/不支持的成对回归案例。这些是已见样例的回归结果，不是未知数据上的准确率。[验证说明](docs/validation.md)分开报告检索、引用存在、答案支持、人工批准、真实连接、耗时和费用。
 
-本地实测：**15 个功能测试通过；29 个诊断案例中 23 个符合固定标签；23 个指定来源的问题中 22 个找到全部必需文档；47 条展示引文均与原文、版本及段落一致。** 仍有 6 个措辞敏感的问题保守转人工，诊断命令因此有意返回退出码 1。
+目前是无鉴权、无文档权限隔离的单工作区本地应用，请仅绑定回环地址。英文关键词检索仍需用目标产品的问题集验证，不支持任意同义改写；政策标签也需维护。人工核对是流程的一部分，不代表程序自动证明了回答正确。
 
-[验证说明](docs/validation.md)记录实际数量、已知失败、指标口径与浏览器流程。检索命中、应转人工处理和原文一致性分开统计。**没有测量生成式回答正确率、真实模型延迟或费用；复制原文不能直接计为回答正确。**
+适合定制的是小型产品知识库、带引用的回复草稿、资料更新及客服交接流程。开始前需要可使用的文档、代表性问题和转人工规则。本版本不包含公开部署、多租户权限、CRM 发信或自动退款。
 
-## 可选本地模型接口
-
-项目不下载或启动模型。已有获授权的本地 Ollama 模型时，指定已安装名称：
-
-~~~powershell
-$env:SUPPORT_MODEL = 'your-installed-local-model'
-$env:OLLAMA_URL = 'http://127.0.0.1:11434'
-$env:MODEL_MAX_CALLS = '10'
-python -m uvicorn support_app.main:create_app --factory --host 127.0.0.1 --port 8123
-~~~
-
-macOS/Linux 使用 `export NAME=value`；取消 `SUPPORT_MODEL` 回到纯检索。接口调用 `/api/chat`，要求 JSON、关闭流式输出，仅接受模型选择的完整原文段落，不接受自由生成政策。超时、服务不可用、进程调用额度耗尽、空结果和无依据输出都会进入可人工处理的失败状态。重启重置调用额度，这不是费用计量器。
-
-**实连状态：** 仅通过明确标注的 HTTP 测试替身验证接口与失败响应；截图和指标不代表真实模型表现。未接入付费 API、CRM、邮件或外部工单平台。
-
-## 重要限制
-
-- 英文关键词检索会漏掉同义改写，也可能找到看似相关却没有回答问题的段落。覆盖度不等于语义支持，“Evidence found”仍需人工核对。
-- 冲突检查依赖**编辑维护的政策键和值**，不是任意自然语言矛盾检测。正文与标签需同步修改；未标记事实不进行语义冲突检查。
-- 正则只识别部分注入模式。更实际的边界是无工具执行能力、接受的模型输出必须是完整原文。知识库不应存秘密。
-- 单用户、单工作区本地演示，无鉴权、多租户隔离、远程上传或公开部署。按示例仅监听回环地址，公开部署需另行设计访问与数据留存规则。
-- 不含 PDF 抓取、向量嵌入、多语言、流式回答或自动业务动作。
-
-## 代码位置与旧学习基线
-
-| 路径 | 用途 |
-| --- | --- |
-| `support_app/` | FastAPI、SQLite、检索、本地模型接口 |
-| `support_app/static/` | 无前端依赖的英文界面 |
-| `support_app/sample_docs.json` | 合成资料及故意设置的政策冲突 |
-| `evaluation/`、`tests/` | 问答诊断与功能验证 |
-| `docs/` | 真实截图、测试结果、来源 |
-| `src/mini_rag_demo.py`、`data/`、`outputs/evaluation_results.csv` | **保持不变的原学习基线** |
-
-原版用字符 TF-IDF 检索，将首条结果拼入固定中文文本。`grounded`、`has_context`只是字符串存在性检查，**不是回答质量评测**。原代码及 Git 历史保留。单独运行时安装 `requirements.txt`，在根目录执行 `python src/mini_rag_demo.py` 会重新生成旧 CSV；新应用使用 `requirements-app.txt`，不依赖 pandas 或 scikit-learn。
-
-## 参考与开发归属
-
-新应用、资料、界面和测试使用 AI 辅助独立开发，未复制参考项目代码、提示词、资料或资源。[参考说明](docs/references.md)保留上游许可证信息与实际借鉴点：可检查引文、显式拒答和人工升级处理。
-
-**作品介绍一句话：** 将产品文档问题转化为版本可追溯的原文证据及可处理的人工工单，提供可复现失败案例和尚未实连的本地模型接口。
+原学习脚本 `src/mini_rag_demo.py`、CSV 资料和 Git 历史保持不变，其字符串检查不能视作回答质量评测。实际应用在 `support_app/`；[参考说明](docs/references.md)列出设计来源及许可证。开发和诊断审查使用了 AI 辅助。

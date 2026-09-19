@@ -6,12 +6,13 @@ import pytest
 from fastapi.testclient import TestClient
 
 from support_app.main import create_app
-from support_app.model import Ollama
+from support_app.model import ChatCompletions
 
 
 @pytest.fixture(autouse=True)
 def disable_environment_model(monkeypatch):
     monkeypatch.setenv("SUPPORT_MODEL", "")
+    monkeypatch.delenv("SUPPORT_DOCUMENTS", raising=False)
 
 
 @pytest.fixture
@@ -27,19 +28,23 @@ def ask(client, question):
 
 
 def make_model(handler, max_calls=10):
-    return Ollama("transport-test-only", transport=httpx.MockTransport(handler), max_calls=max_calls)
+    return ChatCompletions("transport-test-only", "synthetic-key", transport=httpx.MockTransport(handler), max_calls=max_calls)
 
 
 def quote_response(request):
-    assert request.url.host == "127.0.0.1"
-    assert request.url.path == "/api/chat"
+    assert request.url.host == "api.deepseek.com"
+    assert request.url.path == "/chat/completions"
     payload = json.loads(request.content)
     assert payload["stream"] is False
-    assert payload["format"] == "json"
+    assert payload["response_format"] == {"type": "json_object"}
+    assert payload["thinking"] == {"type": "disabled"}
+    assert payload["max_tokens"] == 1200
     source = json.loads(payload["messages"][1]["content"])["sources"][0]
-    return httpx.Response(200, json={"message": {"content": json.dumps({"claims": [
-        {"text": source["text"], "source_id": source["source_id"]}
-    ]})}})
+    return httpx.Response(200, json={"choices": [{"finish_reason": "stop", "message": {"content": json.dumps({
+        "answerable": True, "claims": [{"text": source["text"], "citations": [
+            {"source_id": source["source_id"], "quote": source["text"]}
+        ]}]
+    })}}]})
 
 
 def test_modified_question_changes_retrieved_evidence(client):
@@ -147,34 +152,39 @@ def test_query_and_document_injection_do_not_call_model(tmp_path):
         assert model.calls == 0
 
 
-def test_model_transport_accepts_only_supported_whole_paragraph(tmp_path):
+def test_model_transport_accepts_cited_draft_pending_human_review(tmp_path):
     model = make_model(quote_response)
     with TestClient(create_app(tmp_path / "quotes.db", model=model)) as client:
         result = ask(client, "How do I rotate an API key?")
-    assert result["status"] == "model_quotes" and model.calls == 1
+    assert result["status"] == "draft_ready" and model.calls == 1
     source_by_id = {s["source_id"]: s["text"] for s in result["retrieval"]}
-    assert all(c["text"] == source_by_id[c["source_id"]] for c in result["claims"])
-    assert result["generated_answer"] == "\n\n".join(f'{c["text"]} [{c["source_id"]}]' for c in result["claims"])
+    assert all(cite["quote"] in source_by_id[cite["source_id"]] for c in result["claims"] for cite in c["citations"])
+    assert result["review"]["status"] == "pending"
+    assert result["citation_validation"] == "passed"
+    assert result["support_validation"] == "human_review_required"
 
 
-@pytest.mark.parametrize("failure", ["unsupported", "partial_quote", "bad_source", "bad_json", "empty_claims"])
+@pytest.mark.parametrize("failure", ["invented_quote", "short_quote", "bad_source", "bad_json", "empty_claims", "refusal"])
 def test_model_transport_rejects_unusable_output(tmp_path, failure):
     def respond(request):
         payload = json.loads(request.content)
         source = json.loads(payload["messages"][1]["content"])["sources"][0]
-        claim = {"text": source["text"], "source_id": source["source_id"]}
-        if failure == "unsupported":
-            claim["text"] = "API keys are free and never expire."
-        elif failure == "partial_quote":
-            claim["text"] = source["text"].split(". ")[0] + "."
+        citation = {"source_id": source["source_id"], "quote": source["text"]}
+        claim = {"text": source["text"], "citations": [citation]}
+        if failure == "invented_quote":
+            citation["quote"] = "API keys are free and never expire."
+        elif failure == "short_quote":
+            citation["quote"] = "API"
         elif failure == "bad_source":
-            claim["source_id"] = "invented@v99#p1"
-        content = "not JSON" if failure == "bad_json" else json.dumps({"claims": [] if failure == "empty_claims" else [claim]})
-        return httpx.Response(200, json={"message": {"content": content}})
+            citation["source_id"] = "invented@v99#p1"
+        content = "not JSON" if failure == "bad_json" else json.dumps({
+            "answerable": failure != "refusal", "claims": [] if failure in {"empty_claims", "refusal"} else [claim]
+        })
+        return httpx.Response(200, json={"choices": [{"finish_reason": "stop", "message": {"content": content}}]})
     model = make_model(respond)
     with TestClient(create_app(tmp_path / "rejected.db", model=model)) as client:
         result = ask(client, "How do I rotate an API key?")
-    assert result["status"] == ("model_insufficient" if failure == "empty_claims" else "model_rejected")
+    assert result["status"] == ("model_insufficient" if failure == "refusal" else "model_rejected")
     assert result["generated_answer"] is None and result["claims"] == [] and model.calls == 1
 
 
@@ -198,6 +208,6 @@ def test_model_request_budget_stops_transport(tmp_path):
     with TestClient(create_app(tmp_path / "budget.db", model=model)) as client:
         first = ask(client, "How do I rotate an API key?")
         second = ask(client, "How do I rotate an API key?")
-    assert first["status"] == "model_quotes"
+    assert first["status"] == "draft_ready"
     assert second["status"] == "model_budget_exhausted" and second["generated_answer"] is None
     assert len(seen) == model.calls == 1

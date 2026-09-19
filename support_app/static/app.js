@@ -3,7 +3,7 @@
 
 const $ = (selector, parent = document) => parent.querySelector(selector);
 const $$ = (selector, parent = document) => [...parent.querySelectorAll(selector)];
-const state = {view: "questions", result: null, tickets: [], documents: [], selectedTicket: null, selectedDocument: null, asking: false};
+const state = {view: "questions", result: null, tickets: [], documents: [], selectedTicket: null, selectedDocument: null, asking: false, answerMode: false};
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -50,17 +50,23 @@ function setLoading(target, message) {
 async function refreshOverview() {
   const data = await api("/api/overview");
   $("#document-count").textContent = data.documents;
-  $("#ticket-count").textContent = data.open_tickets;
   $("#queue-count").textContent = data.open_tickets;
-  $("#mode-label").textContent = data.mode === "ollama" ? "Local model mode" : "Evidence mode";
-  $("#model-status").textContent = data.model_verified ? "Verified connection" : "Not verified";
+  state.answerMode = data.mode !== "evidence";
+  $("#mode-label").textContent = state.answerMode ? "Answer mode" : "Evidence mode";
+  $("#model-status").textContent = state.answerMode ? `${data.model_name || "Configured model"} · ${data.model_requests || 0} requests` : "No model calls";
+  $("#mode-note").textContent = state.answerMode ? "Model drafts require your source review and approval before copying a customer reply. No reply is sent by this app." : "Evidence mode finds passages without calling a model. Review the text before writing a reply.";
+  if (!state.asking) $("#ask-button").textContent = state.answerMode ? "Draft reply" : "Find sources";
 }
 
-function sourceCard(source, index) {
+function sourceCard(source, index, sourceMap) {
   const card = el("article", "source-card");
+  card.tabIndex = -1;
   const top = el("div", "source-top");
   append(top, el("span", "source-letter", source.source_id || `S${index + 1}`), el("h3", "", source.title || source.doc_id || "Source document"), el("span", "version", versionLabel(source.version)));
   append(card, top, el("blockquote", "", source.text || "No excerpt is available."));
+  const quotedEvidence = el("div", "quoted-evidence hidden");
+  append(card, quotedEvidence);
+  if (sourceMap) sourceMap.set(source.source_id || `S${index + 1}`, {card, quotedEvidence});
   const footer = el("div", "source-footer");
   append(footer, el("span", "", source.doc_id || source.source_id || "Source"));
   if (source.score !== undefined && source.score !== null) {
@@ -71,6 +77,73 @@ function sourceCard(source, index) {
   return card;
 }
 
+function citationButton(citation, sourceMap) {
+  const button = el("button", "citation-button", citation.source_id || "Source");
+  button.type = "button";
+  button.addEventListener("click", () => {
+    const target = sourceMap.get(citation.source_id);
+    if (!target) { globalError(new Error("This source is missing from the saved result. Do not approve this draft.")); return; }
+    for (const source of sourceMap.values()) { source.card.classList.remove("source-selected"); source.quotedEvidence.classList.add("hidden"); }
+    target.quotedEvidence.replaceChildren(el("strong", "", "Evidence cited for this claim"), el("p", "", citation.quote || "No quotation supplied."));
+    target.quotedEvidence.classList.remove("hidden");
+    target.card.classList.add("source-selected");
+    target.card.scrollIntoView({behavior: "smooth", block: "center"});
+    target.card.focus({preventScroll: true});
+  });
+  return button;
+}
+
+function renderReview(result) {
+  const panel = el("section", "review-panel");
+  const review = result.review || {status: "pending"};
+  const status = el("p", "form-status"); status.setAttribute("role", "status");
+  if (review.status === "approved") {
+    append(panel, el("h3", "", "Reply approved"), el("p", "muted", "You approved this draft after reviewing its sources. Nothing has been sent."));
+    if (review.note) panel.append(el("p", "review-note", review.note));
+    const copy = el("button", "primary", "Copy approved reply"); copy.type = "button";
+    copy.addEventListener("click", async () => {
+      copy.disabled = true; status.className = "form-status"; status.textContent = "Checking document versions…";
+      try {
+        const current = await api(`/api/queries/${encodeURIComponent(result.id)}/reply`);
+        await navigator.clipboard.writeText(current.reply);
+        status.textContent = "Copied. Paste it into your support tool when ready.";
+      } catch (error) { status.textContent = error.message; status.className = "form-status error"; }
+      finally { copy.disabled = false; }
+    });
+    append(panel, append(el("div", "form-actions"), copy), status);
+    return panel;
+  }
+  if (review.status === "rejected") {
+    append(panel, el("h3", "", "Draft rejected"), el("p", "muted", "Use a handoff below if a person needs to investigate."));
+    if (review.note) panel.append(el("p", "review-note", review.note));
+    return panel;
+  }
+  const form = el("form");
+  append(form, el("h3", "", "Review before use"), el("p", "review-explanation", "Source references checked. Whether the evidence supports each claim still needs your review."));
+  const checked = el("input"); checked.type = "checkbox"; checked.id = "support-checked";
+  const checkedLabel = el("label", "checkbox-label");
+  append(checkedLabel, checked, el("span", "", "I checked each claim against the quoted evidence and it is supported."));
+  const noteLabel = el("label", "", "Review note"); noteLabel.htmlFor = "review-note";
+  const note = el("textarea"); note.id = "review-note"; note.rows = 2; note.maxLength = 2000; note.minLength = 3; note.required = true; note.placeholder = "Record what you checked, a caveat, or why this draft should not be used.";
+  const approve = el("button", "primary", "Approve reply"); approve.type = "submit"; approve.disabled = true;
+  const reject = el("button", "secondary", "Reject draft"); reject.type = "button";
+  checked.addEventListener("change", () => { approve.disabled = !checked.checked; });
+  const decide = async decision => {
+    if (decision === "approved" && !checked.checked) return;
+    if (note.value.trim().length < 3) { status.textContent = "Add a review note of at least 3 characters."; status.className = "form-status error"; note.focus(); return; }
+    approve.disabled = true; reject.disabled = true; status.className = "form-status"; status.textContent = "Saving review…";
+    try {
+      const updated = await api(`/api/queries/${encodeURIComponent(result.id)}/review`, {method: "POST", body: JSON.stringify({decision, note: note.value.trim(), support_checked: checked.checked})});
+      if (state.result?.id === result.id) { state.result = updated; renderResult(updated); }
+    } catch (error) { status.textContent = error.message; status.className = "form-status error"; approve.disabled = !checked.checked; reject.disabled = false; }
+  };
+  form.addEventListener("submit", event => { event.preventDefault(); decide("approved"); });
+  reject.addEventListener("click", () => decide("rejected"));
+  append(form, checkedLabel, noteLabel, note, append(el("div", "form-actions"), approve, reject), status);
+  panel.append(form);
+  return panel;
+}
+
 function sectionHeading(title, note) {
   return append(el("div", "subheading"), el("span", "", title), note ? el("small", "", note) : null);
 }
@@ -78,44 +151,54 @@ function sectionHeading(title, note) {
 function renderResult(result) {
   const body = el("div", "result-body");
   const isEvidence = result.status === "evidence_found";
-  const titles = {evidence_found: "Relevant evidence found", needs_review: "A person should review this", conflict: "The sources disagree", unsafe_request: "This request needs a safe handoff", model_quotes: "Model-selected quotations — review required", model_timeout: "Model timed out — evidence retained", model_budget_exhausted: "Model allowance reached", model_insufficient: "The model found insufficient evidence", model_rejected: "Model output withheld", model_error: "Model unavailable — evidence retained", model_unavailable: "Model unavailable — evidence retained", model_invalid: "Model answer needs review", model_unsupported: "Model answer could not be verified"};
-  const banner = el("div", `result-banner${isEvidence ? "" : " warning"}`);
-  append(banner, el("h2", "", `${isEvidence ? "✓" : "!"}  ${titles[result.status] || "Review required"}`), el("p", "", result.reason || "Review the original sources before responding to your customer."));
+  const isDraft = result.status === "draft_ready";
+  const sourceMap = new Map();
+  const titles = {evidence_found: "Sources found", draft_ready: "Draft ready for review", needs_review: "More information needed", conflict: "The sources disagree", unsafe_request: "Request needs review", model_quotes: "Source quotations need review", model_timeout: "Model timed out", model_budget_exhausted: "Model request limit reached", model_insufficient: "Not enough evidence for a draft", model_rejected: "Model output withheld", model_error: "Model unavailable", model_unavailable: "Model unavailable", model_invalid: "Model output could not be used", model_unsupported: "Model output could not be used"};
+  const banner = el("div", `result-banner${isEvidence || isDraft ? "" : " warning"}`);
+  const reviewedTitle = isDraft && result.review?.status === "approved" ? "Draft approved" : isDraft && result.review?.status === "rejected" ? "Draft rejected" : null;
+  const reviewedReason = reviewedTitle ? (result.review.status === "approved" ? "Ready to copy after a document-version check. No reply has been sent." : "This draft was rejected. Create a handoff if a person needs to investigate.") : null;
+  append(banner, el("h2", "", reviewedTitle || titles[result.status] || "Review required"), el("p", "", reviewedReason || result.reason || "Review the original sources before responding to your customer."));
   const meta = el("div", "result-meta");
-  append(meta, tag(result.mode === "ollama" ? "Local model requested" : "No model called"), el("span", "", result.revision_label || "Current document versions"));
+  append(meta, el("span", "", result.revision_label || "Current document versions"));
   append(banner, meta);
   append(body, banner, el("p", "result-question", `Question: ${result.question}`));
   if (result.generated_answer) {
-    append(body, sectionHeading("Model-selected answer", "Review against the sources below"), el("div", "generated-answer", result.generated_answer), el("p", "model-disclaimer", "The model selects source quotations. Exact matching does not prove relevance; review before responding."));
+    const draft = el("section", "draft-answer");
+    append(draft, el("h2", "", "Draft answer"), el("div", "generated-answer", result.generated_answer));
+    if (Array.isArray(result.claims) && result.claims.length) {
+      append(draft, sectionHeading("Check the claims", "Open each cited passage"));
+      for (const claim of result.claims) {
+        const item = el("div", "claim-item");
+        append(item, el("p", "", claim.text));
+        const citations = el("div", "claim-citations");
+        for (const citation of claim.citations || []) citations.append(citationButton(citation, sourceMap));
+        if (!citations.childElementCount) citations.append(el("span", "form-status error", "No source attached"));
+        item.append(citations); draft.append(item);
+      }
+    }
+    append(body, draft);
+    if (isDraft) body.append(renderReview(result));
   } else {
-    append(body, el("p", "micro muted", result.mode === "ollama" ? "No verified model answer is displayed. Retrieved text remains available for review." : "Source excerpts only. No generated answer or resolution is implied."));
+    append(body, el("p", "section-note", result.mode !== "evidence" ? "No draft is available. Review the retrieved passages or create a handoff." : "These are source excerpts, not a generated answer."));
   }
   if (Array.isArray(result.conflicts) && result.conflicts.length) {
     append(body, sectionHeading("Conflicting policy facts"));
     for (const conflict of result.conflicts) append(body, el("div", "conflict-line", `${conflict.key}: ${(conflict.values || []).map(value => typeof value === "object" ? JSON.stringify(value) : value).join(" ↔ ")}`));
   }
-  if (!result.generated_answer && Array.isArray(result.claims) && result.claims.length) {
-    append(body, sectionHeading("Extracted evidence", "Check the cited passage"));
-    for (const claim of result.claims) {
-      const quote = el("div", "evidence-claim");
-      append(quote, el("span", "", claim.text), tag(claim.source_id || "Source"));
-      append(body, quote);
-    }
-  }
   const retrieval = Array.isArray(result.retrieval) ? result.retrieval : [];
-  append(body, sectionHeading(`Retrieved documents (${retrieval.length})`, "Ranking scores are not confidence"));
-  if (retrieval.length) retrieval.forEach((source, index) => body.append(sourceCard(source, index)));
+  append(body, sectionHeading(`Source passages (${retrieval.length})`, "Retrieval rank is not answer confidence"));
+  if (retrieval.length) retrieval.forEach((source, index) => body.append(sourceCard(source, index, sourceMap)));
   else append(body, el("p", "empty-detail-message", "No supporting passage is available for this question. Pass it to an operator instead of guessing."));
   const handoff = el("div", "handoff-bar");
-  const explanation = append(el("p"), el("strong", "", isEvidence ? "Need a second look?" : "Keep the question moving."), el("span", "", "Save the question and its evidence in the local queue."));
-  const button = el("button", "secondary", "Create local handoff  ↗");
+  const explanation = append(el("p"), el("strong", "", "Need someone to investigate?"), el("span", "", "Save this question and its sources as a local ticket."));
+  const button = el("button", "secondary", "Create handoff");
   button.type = "button";
   button.addEventListener("click", async () => {
     button.disabled = true;
     button.textContent = "Creating handoff…";
     try {
       const ticket = await api("/api/tickets", {method: "POST", body: JSON.stringify({query_id: result.id})});
-      button.textContent = "Open handoff  ↗";
+      button.textContent = "Open handoff";
       button.disabled = false;
       const openButton = button.cloneNode(true);
       button.replaceWith(openButton);
@@ -139,22 +222,22 @@ $("#ask-form").addEventListener("submit", async event => {
   $$("[data-question]").forEach(item => { item.disabled = true; });
   const button = $("#ask-button");
   button.disabled = true;
-  button.textContent = "Finding evidence…";
-  $("#response-time").textContent = "";
-  setLoading($("#response-content"), "Searching the current document versions…");
+  button.textContent = state.answerMode ? "Preparing draft…" : "Finding sources…";
+  $("#response-time").textContent = "Working…";
+  if (!state.result) setLoading($("#response-content"), "Searching the current document versions…");
   try {
     state.result = await api("/api/ask", {method: "POST", body: JSON.stringify({question})});
     renderResult(state.result);
+    await refreshOverview().catch(globalError);
   } catch (error) {
-    const message = append(el("div", "result-body"), el("div", "notice error", error.message), el("p", "muted", "No answer was produced. Your question is still in the editor; try again when the service is available."));
-    $("#response-content").replaceChildren(message);
+    globalError(error);
+    if (!state.result) $("#response-content").replaceChildren(append(el("div", "result-body"), el("p", "muted", "No result was received. Your question is still in the editor; try again when the service is available.")));
+    $("#response-time").textContent = state.result ? "Previous result retained" : "Request failed";
   } finally {
     state.asking = false;
     $$("[data-question]").forEach(item => { item.disabled = false; });
     button.disabled = false;
-    button.replaceChildren(el("span", "", "Find supporting evidence"), el("span", "", "↗"));
-    button.firstChild.style.marginLeft = "0";
-    button.firstChild.style.fontSize = "inherit";
+    button.textContent = state.answerMode ? "Draft reply" : "Find sources";
   }
 });
 
@@ -275,12 +358,56 @@ async function loadDocuments() {
   if (selected) await renderDocument(selected);
 }
 
+function renderNewDocument() {
+  state.selectedDocument = null;
+  renderDocumentList();
+  const target = $("#document-detail");
+  target.replaceChildren(el("h2", "", "New document"), el("p", "section-note", "Use a short, approved support policy. Split unrelated topics into separate documents."));
+  const form = el("form");
+  const inputs = {};
+  const fields = [
+    ["id", "Document ID", "input", "e.g. export-policy"],
+    ["title", "Title", "input", "e.g. Data export policy"],
+    ["text", "Document text", "textarea", "Write the policy in plain English."],
+    ["fact_key", "Policy fact key (optional)", "input", "e.g. export_link_hours"],
+    ["fact_value", "Policy fact value (optional)", "input", "e.g. 24"]
+  ];
+  for (const [name, labelText, type, placeholder] of fields) {
+    const label = el("label", "", labelText); label.htmlFor = `new-${name}`;
+    const input = el(type); input.id = `new-${name}`; input.placeholder = placeholder;
+    input.required = ["id", "title", "text"].includes(name);
+    input.maxLength = {id: 80, title: 160, text: 6000, fact_key: 80, fact_value: 120}[name];
+    if (name === "id") { input.pattern = "[a-z0-9][a-z0-9\\-]*"; input.title = "Use lowercase letters, numbers and hyphens; start with a letter or number."; }
+    if (name === "title") input.minLength = 3;
+    if (name === "text") { input.rows = 7; input.minLength = 10; }
+    if (name === "fact_key") { input.pattern = "[a-z0-9_]*"; input.title = "Use lowercase letters, numbers and underscores."; }
+    inputs[name] = input;
+    append(form, label, input);
+  }
+  append(form, el("p", "micro muted", "Optional fact fields flag conflicts between documents with the same key. The value must also appear in the text."));
+  const save = el("button", "primary", "Add document"); save.type = "submit";
+  const cancel = el("button", "secondary", "Cancel"); cancel.type = "button";
+  cancel.addEventListener("click", () => navigate("knowledge"));
+  const status = el("p", "form-status"); status.setAttribute("role", "status");
+  append(form, append(el("div", "form-actions"), save, cancel), status);
+  form.addEventListener("submit", async event => {
+    event.preventDefault(); save.disabled = true; status.className = "form-status"; status.textContent = "Adding document…";
+    try {
+      const body = Object.fromEntries(Object.entries(inputs).map(([name, input]) => [name, input.value.trim()]));
+      const created = await api("/api/documents", {method: "POST", body: JSON.stringify(body)});
+      state.documents.push(created); state.selectedDocument = created.id;
+      renderDocumentList(); await renderDocument(created, "Document added. New questions can use it."); await refreshOverview();
+    } catch (error) { status.textContent = error.message; status.className = "form-status error"; save.disabled = false; }
+  });
+  target.append(form); inputs.id.focus();
+}
+
 async function navigate(view) {
   if (!["questions", "tickets", "knowledge"].includes(view)) view = "questions";
   state.view = view; clearError();
   $$(".view").forEach(node => node.classList.toggle("hidden", node.id !== `view-${view}`));
   $$("[data-view]").forEach(button => { button.classList.toggle("active", button.dataset.view === view); button.setAttribute("aria-current", button.dataset.view === view ? "page" : "false"); });
-  $("#breadcrumb").textContent = {questions: "Questions", tickets: "Handoff queue", knowledge: "Knowledge"}[view];
+  $("#breadcrumb").textContent = {questions: "Questions", tickets: "Handoffs", knowledge: "Documents"}[view];
   history.replaceState(null, "", `#${view}`);
   try {
     if (view === "tickets") await loadTickets();
@@ -293,5 +420,6 @@ $$('[data-view]').forEach(button => button.addEventListener("click", () => navig
 $(".brand").addEventListener("click", event => { event.preventDefault(); navigate("questions"); });
 $("#refresh-tickets").addEventListener("click", () => navigate("tickets"));
 $("#refresh-documents").addEventListener("click", () => navigate("knowledge"));
+$("#new-document").addEventListener("click", renderNewDocument);
 window.addEventListener("hashchange", () => navigate(location.hash.slice(1)));
 navigate(location.hash.slice(1) || "questions");

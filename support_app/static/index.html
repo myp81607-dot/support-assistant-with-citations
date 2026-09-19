@@ -4,42 +4,49 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
-  <title>HarborDesk — Support workspace</title>
+  <title>HarborDesk · Support questions</title>
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/app.js" defer></script>
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
-      <a class="brand" href="#questions" aria-label="HarborDesk home"><span class="brand-mark" aria-hidden="true">h<span>·</span></span><span>HarborDesk<small>SUPPORT WORKSPACE</small></span></a>
-      <div class="workspace"><span class="workspace-icon">H</span><div>HarborDesk Cloud<small>Demo workspace</small></div><span class="workspace-dot"></span></div>
-      <p class="nav-label">WORKSPACE</p>
+      <a class="brand" href="#questions">HarborDesk<span>Support workspace</span></a>
       <nav aria-label="Main navigation">
-        <button class="nav-item active" data-view="questions"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-5 4V6a2 2 0 0 1 2-2Z"/><path d="M7 9h10M7 13h7"/></svg>Questions</button>
-        <button class="nav-item" data-view="tickets"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 5h16v14H4zM4 13h4l2 3h4l2-3h4M8 9h8"/></svg>Handoff queue<span id="queue-count" class="nav-count">0</span></button>
-        <button class="nav-item" data-view="knowledge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1Zm0 0v15"/></svg>Knowledge</button>
+        <button class="nav-item active" data-view="questions">Questions</button>
+        <button class="nav-item" data-view="tickets">Handoffs<span id="queue-count" class="nav-count">0</span></button>
+        <button class="nav-item" data-view="knowledge">Documents</button>
       </nav>
-      <div class="sidebar-bottom"><div class="local-state"><span></span>Running locally</div><p>Synthetic policies. Real workflow.<br>No customer data or messages.</p><div class="profile"><span>HD</span><div>Demo operator<small>Local workspace</small></div></div></div>
+      <p class="sidebar-note">Personal demo<br>Synthetic support policies</p>
     </aside>
     <div class="main-shell">
-      <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <strong id="breadcrumb">Questions</strong></div><span class="demo-badge">PERSONAL DEMO</span></header>
+      <header class="topbar"><span id="breadcrumb">Questions</span><span class="muted">Local workspace</span></header>
       <main>
         <div id="global-error" class="notice error hidden" role="alert"></div>
         <section id="view-questions" class="view">
-          <div class="page-heading"><div><p class="eyebrow">DOCUMENTS → EVIDENCE → NEXT STEP</p><h1>Answers start with evidence.</h1><p>Find the policy, inspect the source, and hand off what needs a person.</p></div><span class="mode-pill"><span></span><span id="mode-label">Evidence mode</span></span></div>
-          <div class="metrics"><div><span class="metric-icon">↗</span><p>Knowledge base<strong><span id="document-count">—</span> <small>documents</small></strong></p></div><div><span class="metric-icon">↪</span><p>Human handoffs<strong><span id="ticket-count">—</span> <small>open tickets</small></strong></p></div><div><span class="metric-icon">◎</span><p>Model connection<strong id="model-status">Not verified</strong></p></div></div>
+          <div class="page-heading"><div><h1>Support questions</h1><p>Find the relevant policy, check the source, then prepare a reply or hand it to a person.</p></div></div>
+          <p class="workspace-status"><span id="mode-label">Evidence mode</span><span id="document-count">—</span> documents<span id="model-status">No model calls</span></p>
           <div class="question-grid">
-            <section class="panel ask-panel"><div class="section-label"><span class="step">01</span> ASK A QUESTION</div><h2>What does your customer need?</h2><p class="muted">Search the HarborDesk Cloud support docs.</p><form id="ask-form"><label for="question">Customer question</label><textarea id="question" rows="5" minlength="3" maxlength="1000" required placeholder="e.g. How do I rotate an API key?"></textarea><button class="primary full" id="ask-button" type="submit">Find supporting evidence <span>↗</span></button></form><div class="examples"><p class="small-label">TRY A REAL SUPPORT SCENARIO</p><button data-question="How do I rotate an API key?"><span>API key rotation</span><span>↗</span></button><button data-question="Can I get a refund after 30 days?"><span>A question without an answer</span><span>↗</span></button><button data-question="What is the data retention period?"><span>Conflicting retention policies</span><span>↗</span></button><button data-question="How do I export data and close my workspace?"><span>Export and close a workspace</span><span>↗</span></button></div><div class="mode-note"><span aria-hidden="true">ⓘ</span><p><strong>Evidence first, always.</strong><br>Default mode retrieves source text without calling a model. A match is a lead to review, not a resolved ticket.</p></div></section>
-            <section class="panel response-panel" aria-live="polite"><div class="response-heading"><div class="section-label"><span class="step">02</span> REVIEW THE EVIDENCE</div><span id="response-time" class="micro muted"></span></div><div id="response-content"><div class="empty-state"><div class="empty-icon"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="8" y="5" width="23" height="30" rx="3"/><path d="M14 13h11M14 19h11M14 25h7"/><circle cx="29" cy="29" r="6" fill="var(--panel)"/><path d="m33 34 4 4"/></svg></div><h2>A clear trail back to the source.</h2><p>Ask a question to see relevant passages,<br>document versions, and the next step.</p><div class="empty-chips"><span>Traceable sources</span><span>Human handoff</span></div></div></div></section>
+            <section class="panel ask-panel">
+              <form id="ask-form"><label for="question">Customer question</label><textarea id="question" rows="5" minlength="3" maxlength="1000" required placeholder="How long do export download links last?"></textarea><button class="primary full" id="ask-button" type="submit">Find sources</button></form>
+              <div class="examples"><p class="small-label">Try a question</p><button data-question="How long do export download links last?">Export link expiry</button><button data-question="How do I rotate an API key?">Replace an API key</button><button data-question="Can I get a refund after 30 days?">Refund with no policy available</button><button data-question="What is the data retention period?">Conflicting retention policies</button></div>
+              <p class="mode-note" id="mode-note">Evidence mode finds passages without calling a model. Review the text before writing a reply.</p>
+            </section>
+            <section class="panel response-panel" aria-live="polite"><div class="response-heading"><h2>Results</h2><span id="response-time" class="micro muted"></span></div><div id="response-content"><div class="empty-state"><h2>No question yet</h2><p>Relevant passages and their document versions will appear here.</p></div></div></section>
           </div>
-          <footer class="page-footer"><span>Built for careful support decisions.</span><span>Local tickets · Versioned documents · Inspectable retrieval</span></footer>
         </section>
-        <section id="view-tickets" class="view hidden"><div class="page-heading"><div><p class="eyebrow">KEEP THE CONTEXT, HAND OFF THE DECISION</p><h1>Handoff queue</h1><p>Review questions that need a person, with the evidence attached.</p></div><button class="secondary" id="refresh-tickets">Refresh queue</button></div><div class="notice neutral">These tickets stay in this local demo. No CRM is connected and no customer is contacted.</div><div class="management-grid"><section class="panel"><div class="panel-title"><h2>Local tickets</h2><span id="ticket-total" class="muted micro"></span></div><div id="ticket-list" class="record-list"></div></section><section class="panel detail-panel" id="ticket-detail"><div class="empty-state compact"><h2>Every handoff keeps its context.</h2><p>Select a ticket to review evidence and add operator notes.</p></div></section></div></section>
-        <section id="view-knowledge" class="view hidden"><div class="page-heading"><div><p class="eyebrow">THE SOURCE OF EVERY ANSWER</p><h1>Knowledge base</h1><p>Edit synthetic support policies and inspect their revision history.</p></div><button class="secondary" id="refresh-documents">Refresh documents</button></div><div class="notice neutral">Edits create a new version. New questions use the latest text; existing tickets preserve their original evidence.</div><div class="management-grid"><section class="panel"><div class="panel-title"><h2>Support documents</h2><span id="knowledge-total" class="muted micro"></span></div><div id="document-list" class="record-list"></div></section><section class="panel detail-panel" id="document-detail"><div class="empty-state compact"><h2>Policies should be easy to inspect.</h2><p>Select a document to edit its text and review past versions.</p></div></section></div></section>
+        <section id="view-tickets" class="view hidden">
+          <div class="page-heading"><div><h1>Handoffs</h1><p>Questions needing a person, with their original sources and notes.</p></div><button class="secondary" id="refresh-tickets">Refresh</button></div>
+          <p class="section-note">Tickets are saved locally. This app does not contact customers or connect to a CRM.</p>
+          <div class="management-grid"><section class="panel"><div class="panel-title"><h2>Tickets</h2><span id="ticket-total" class="muted micro"></span></div><div id="ticket-list" class="record-list"></div></section><section class="panel detail-panel" id="ticket-detail"><div class="empty-state compact"><h2>No ticket selected</h2><p>Select a ticket to review its sources and add notes.</p></div></section></div>
+        </section>
+        <section id="view-knowledge" class="view hidden">
+          <div class="page-heading"><div><h1>Documents</h1><p>Add your support text or update an existing policy.</p></div><div class="heading-actions"><button class="secondary" id="refresh-documents">Refresh</button><button class="primary" id="new-document">New document</button></div></div>
+          <p class="section-note">Saving an edit creates a version. New questions use the latest text; earlier questions and handoffs keep their sources.</p>
+          <div class="management-grid"><section class="panel"><div class="panel-title"><h2>Support documents</h2><span id="knowledge-total" class="muted micro"></span></div><div id="document-list" class="record-list"></div></section><section class="panel detail-panel" id="document-detail"><div class="empty-state compact"><h2>No document selected</h2><p>Select a document to edit its text and inspect previous versions.</p></div></section></div>
+        </section>
       </main>
     </div>
   </div>
 </body>
 </html>
-
-

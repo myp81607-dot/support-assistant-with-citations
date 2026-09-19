@@ -1,0 +1,14 @@
+[
+  {
+    "id": "export-links",
+    "title": "Export download links",
+    "text": "An administrator can export customer records as a CSV archive from Settings > Data > Export. Export download links expire after 48 hours. Generate a new export if the download link has expired.",
+    "fact_key": "export_link_validity",
+    "fact_value": "48 hours"
+  },
+  {
+    "id": "support-hours",
+    "title": "Support opening hours",
+    "text": "The support team handles requests Monday to Friday, 08:00 to 16:00 UTC. Include your workspace ID and the steps that led to the problem. The team does not promise a fixed resolution time."
+  }
+]

@@ -23,7 +23,7 @@ def run():
     results = []
     with tempfile.TemporaryDirectory(prefix="harbordesk-evaluation-") as temporary:
         for case in dataset["cases"]:
-            with patch.dict(os.environ, {"SUPPORT_MODEL": ""}):
+            with patch.dict(os.environ, {"SUPPORT_MODEL": "", "SUPPORT_DOCUMENTS": ""}):
                 app = create_app(Path(temporary) / f'{case["id"]}.db')
             with TestClient(app) as client:
                 if "update" in case:

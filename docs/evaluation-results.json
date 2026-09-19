@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-19T05:33:34+00:00",
+  "generated_at_utc": "2026-09-19T06:34:23+00:00",
   "label_provenance": "Synthetic questions authored by a separate coding agent after reading the implemented app and sample documents. These are not human-expert labels, customer traffic, or evidence of LLM answer accuracy. The held_out subset was authored after implementation and its labels are not tuned to observed results. The held_out failures were subsequently inspected during implementation fixes; final results are diagnostic, not a blind generalization estimate.",
   "status_definition": "evidence_found requests useful source excerpts, not a correct generated answer. needs_review requests abstention when the requested fact is absent. Expected documents and text fragments check retrieval usefulness only.",
   "execution": "Fresh temporary SQLite database per case; FastAPI TestClient; model disabled. No network or real model calls.",
@@ -14,31 +14,24 @@
   "generated_answer_accuracy": "N/A: model disabled; citation equality is not generated answer accuracy.",
   "summary": {
     "cases": 29,
-    "all_checks_passed": 23,
-    "status_matches": 23,
-    "required_document_checks_passed": 28,
+    "all_checks_passed": 29,
+    "status_matches": 29,
+    "required_document_checks_passed": 29,
     "labeled_retrieval_cases": 23,
-    "required_document_hits": 22,
+    "required_document_hits": 23,
     "expected_gold_document_ids": 27,
-    "matched_gold_document_ids": 26,
-    "checked_quotes": 47,
-    "quotes_matching_current_documents": 47,
-    "failed_case_ids": [
-      "N04",
-      "P01",
-      "P02",
-      "P03",
-      "P04",
-      "P05"
-    ],
+    "matched_gold_document_ids": 27,
+    "checked_quotes": 48,
+    "quotes_matching_current_documents": 48,
+    "failed_case_ids": [],
     "observed_status_counts": {
-      "evidence_found": 12,
-      "needs_review": 12,
+      "evidence_found": 18,
+      "needs_review": 6,
       "conflict": 2,
       "unsafe_request": 3
     },
-    "median_request_latency_ms": 5.83,
-    "max_request_latency_ms": 8.02
+    "median_request_latency_ms": 5.51,
+    "max_request_latency_ms": 7.29
   },
   "by_category": {
     "conflict": {
@@ -91,8 +84,8 @@
     },
     "normal": {
       "cases": 10,
-      "all_checks_passed": 9,
-      "status_matches": 9,
+      "all_checks_passed": 10,
+      "status_matches": 10,
       "required_document_checks_passed": 10,
       "labeled_retrieval_cases": 10,
       "required_document_hits": 10,
@@ -103,15 +96,15 @@
     },
     "paraphrase": {
       "cases": 5,
-      "all_checks_passed": 0,
-      "status_matches": 0,
-      "required_document_checks_passed": 4,
+      "all_checks_passed": 5,
+      "status_matches": 5,
+      "required_document_checks_passed": 5,
       "labeled_retrieval_cases": 5,
-      "required_document_hits": 4,
+      "required_document_hits": 5,
       "expected_gold_document_ids": 5,
-      "matched_gold_document_ids": 4,
-      "checked_quotes": 7,
-      "quotes_matching_current_documents": 7
+      "matched_gold_document_ids": 5,
+      "checked_quotes": 8,
+      "quotes_matching_current_documents": 8
     },
     "unknown": {
       "cases": 6,
@@ -129,8 +122,8 @@
   "by_split": {
     "development": {
       "cases": 22,
-      "all_checks_passed": 18,
-      "status_matches": 18,
+      "all_checks_passed": 22,
+      "status_matches": 22,
       "required_document_checks_passed": 22,
       "labeled_retrieval_cases": 18,
       "required_document_hits": 18,
@@ -141,15 +134,15 @@
     },
     "held_out": {
       "cases": 7,
-      "all_checks_passed": 5,
-      "status_matches": 5,
-      "required_document_checks_passed": 6,
+      "all_checks_passed": 7,
+      "status_matches": 7,
+      "required_document_checks_passed": 7,
       "labeled_retrieval_cases": 5,
-      "required_document_hits": 4,
+      "required_document_hits": 5,
       "expected_gold_document_ids": 5,
-      "matched_gold_document_ids": 4,
-      "checked_quotes": 11,
-      "quotes_matching_current_documents": 11
+      "matched_gold_document_ids": 5,
+      "checked_quotes": 12,
+      "quotes_matching_current_documents": 12
     }
   },
   "limitations": [
@@ -189,7 +182,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 6.22,
+      "latency_ms": 7.29,
       "citation_checks": [
         {
           "source_id": "api-keys@v1#p1",
@@ -234,7 +227,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.3,
+      "latency_ms": 5.38,
       "citation_checks": [
         {
           "source_id": "api-errors@v1#p1",
@@ -274,7 +267,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.01,
+      "latency_ms": 5.46,
       "citation_checks": [
         {
           "source_id": "api-limits@v1#p1",
@@ -297,7 +290,7 @@
       "category": "normal",
       "question": "How long do export download links last?",
       "expected_status": "evidence_found",
-      "observed_status": "needs_review",
+      "observed_status": "evidence_found",
       "expected_docs": [
         "export"
       ],
@@ -312,12 +305,9 @@
           "text": "Workspace administrators can export tickets and contacts from Settings > Data > Export. The export is a CSV archive. Download links expire after 24 hours. Export your data before closing the workspace."
         }
       ],
-      "coverage": 0.521,
-      "unknown_terms": [
-        "last",
-        "long"
-      ],
-      "latency_ms": 4.87,
+      "coverage": 1.0,
+      "unknown_terms": [],
+      "latency_ms": 5.07,
       "citation_checks": [
         {
           "source_id": "export@v1#p1",
@@ -325,14 +315,14 @@
         }
       ],
       "checks": {
-        "status_matches": false,
+        "status_matches": true,
         "required_documents_present": true,
         "required_fragments_present": true,
         "required_versions_present": true,
         "no_generated_answer": true,
         "citations_match_current_documents": true
       },
-      "passed": false
+      "passed": true
     },
     {
       "id": "N05",
@@ -358,7 +348,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 6.93,
+      "latency_ms": 4.76,
       "citation_checks": [
         {
           "source_id": "sso@v1#p1",
@@ -398,7 +388,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 8.02,
+      "latency_ms": 5.88,
       "citation_checks": [
         {
           "source_id": "members@v1#p1",
@@ -445,7 +435,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 7.39,
+      "latency_ms": 5.26,
       "citation_checks": [
         {
           "source_id": "billing@v1#p1",
@@ -489,7 +479,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 6.24,
+      "latency_ms": 6.0,
       "citation_checks": [
         {
           "source_id": "support-hours@v1#p1",
@@ -530,7 +520,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 7.7,
+      "latency_ms": 5.42,
       "citation_checks": [
         {
           "source_id": "import@v1#p1",
@@ -571,7 +561,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.83,
+      "latency_ms": 5.51,
       "citation_checks": [
         {
           "source_id": "webhooks@v1#p1",
@@ -625,7 +615,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 7.39,
+      "latency_ms": 6.2,
       "citation_checks": [
         {
           "source_id": "api-errors@v1#p1",
@@ -681,7 +671,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 6.31,
+      "latency_ms": 5.23,
       "citation_checks": [
         {
           "source_id": "export@v1#p1",
@@ -724,7 +714,7 @@
         "provisioning",
         "scim"
       ],
-      "latency_ms": 5.47,
+      "latency_ms": 5.24,
       "citation_checks": [
         {
           "source_id": "sso@v1#p1",
@@ -770,7 +760,7 @@
       "unknown_terms": [
         "json"
       ],
-      "latency_ms": 6.22,
+      "latency_ms": 5.83,
       "citation_checks": [
         {
           "source_id": "export@v1#p1",
@@ -821,7 +811,7 @@
         "delay",
         "exponential"
       ],
-      "latency_ms": 6.18,
+      "latency_ms": 5.5,
       "citation_checks": [
         {
           "source_id": "api-limits@v1#p1",
@@ -883,7 +873,7 @@
         "deleted",
         "restored"
       ],
-      "latency_ms": 6.23,
+      "latency_ms": 5.55,
       "citation_checks": [
         {
           "source_id": "closure@v1#p1",
@@ -934,7 +924,7 @@
         "monthly",
         "price"
       ],
-      "latency_ms": 5.29,
+      "latency_ms": 5.76,
       "citation_checks": [
         {
           "source_id": "sso@v1#p1",
@@ -976,7 +966,7 @@
       "unknown_terms": [
         "guaranteed"
       ],
-      "latency_ms": 5.61,
+      "latency_ms": 5.74,
       "citation_checks": [
         {
           "source_id": "support-hours@v1#p1",
@@ -1026,7 +1016,7 @@
       "unknown_terms": [
         "period"
       ],
-      "latency_ms": 6.09,
+      "latency_ms": 5.52,
       "citation_checks": [
         {
           "source_id": "retention-guide@v1#p1",
@@ -1078,7 +1068,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.75,
+      "latency_ms": 5.6,
       "citation_checks": [
         {
           "source_id": "retention-guide@v1#p1",
@@ -1118,7 +1108,7 @@
         "reveal",
         "system"
       ],
-      "latency_ms": 5.47,
+      "latency_ms": 5.62,
       "citation_checks": [],
       "checks": {
         "status_matches": true,
@@ -1165,7 +1155,7 @@
         "show",
         "variable"
       ],
-      "latency_ms": 5.96,
+      "latency_ms": 5.75,
       "citation_checks": [
         {
           "source_id": "api-keys@v1#p1",
@@ -1232,7 +1222,7 @@
         "private",
         "shell"
       ],
-      "latency_ms": 5.16,
+      "latency_ms": 5.66,
       "citation_checks": [
         {
           "source_id": "import@v1#p1",
@@ -1267,7 +1257,7 @@
       "category": "paraphrase",
       "question": "How do I replace an access credential without interrupting my integration?",
       "expected_status": "evidence_found",
-      "observed_status": "needs_review",
+      "observed_status": "evidence_found",
       "expected_docs": [
         "api-keys"
       ],
@@ -1276,46 +1266,40 @@
       ],
       "observed_sources": [
         {
-          "source_id": "api-errors@v1#p1",
-          "doc_id": "api-errors",
-          "version": 1,
-          "text": "A 401 Unauthorized response means the API key is missing, invalid, or revoked. Send the current key in the Authorization: Bearer header. Check that your integration uses the correct workspace key."
-        },
-        {
           "source_id": "api-keys@v1#p1",
           "doc_id": "api-keys",
           "version": 1,
           "text": "To rotate an API key, open Settings > API keys, select Create key, and copy the new key into your integration. Verify a successful request with the new key before revoking the old key. Only workspace administrators can create or revoke API keys."
-        }
-      ],
-      "coverage": 0.114,
-      "unknown_terms": [
-        "acces",
-        "credential",
-        "interrupting",
-        "replace",
-        "without"
-      ],
-      "latency_ms": 5.29,
-      "citation_checks": [
+        },
         {
           "source_id": "api-errors@v1#p1",
+          "doc_id": "api-errors",
+          "version": 1,
+          "text": "A 401 Unauthorized response means the API key is missing, invalid, or revoked. Send the current key in the Authorization: Bearer header. Check that your integration uses the correct workspace key."
+        }
+      ],
+      "coverage": 1.0,
+      "unknown_terms": [],
+      "latency_ms": 5.04,
+      "citation_checks": [
+        {
+          "source_id": "api-keys@v1#p1",
           "matches_current_document": true
         },
         {
-          "source_id": "api-keys@v1#p1",
+          "source_id": "api-errors@v1#p1",
           "matches_current_document": true
         }
       ],
       "checks": {
-        "status_matches": false,
+        "status_matches": true,
         "required_documents_present": true,
         "required_fragments_present": true,
         "required_versions_present": true,
         "no_generated_answer": true,
         "citations_match_current_documents": true
       },
-      "passed": false
+      "passed": true
     },
     {
       "id": "P02",
@@ -1323,7 +1307,7 @@
       "category": "paraphrase",
       "question": "How can I let a colleague join our team?",
       "expected_status": "evidence_found",
-      "observed_status": "needs_review",
+      "observed_status": "evidence_found",
       "expected_docs": [
         "members"
       ],
@@ -1338,13 +1322,9 @@
           "text": "An administrator can invite team members from Settings > Members by entering their work email address. The available roles are Administrator, Agent, and Viewer. Viewers can read tickets but cannot edit them."
         }
       ],
-      "coverage": 0.204,
-      "unknown_terms": [
-        "colleague",
-        "join",
-        "let"
-      ],
-      "latency_ms": 5.32,
+      "coverage": 1.0,
+      "unknown_terms": [],
+      "latency_ms": 5.62,
       "citation_checks": [
         {
           "source_id": "members@v1#p1",
@@ -1352,14 +1332,14 @@
         }
       ],
       "checks": {
-        "status_matches": false,
+        "status_matches": true,
         "required_documents_present": true,
         "required_fragments_present": true,
         "required_versions_present": true,
         "no_generated_answer": true,
         "citations_match_current_documents": true
       },
-      "passed": false
+      "passed": true
     },
     {
       "id": "P03",
@@ -1367,7 +1347,7 @@
       "category": "paraphrase",
       "question": "Where can I move invoice messages to a different mailbox?",
       "expected_status": "evidence_found",
-      "observed_status": "needs_review",
+      "observed_status": "evidence_found",
       "expected_docs": [
         "billing"
       ],
@@ -1382,14 +1362,9 @@
           "text": "The workspace owner can change the billing email address in Settings > Billing > Billing contact. New invoices use the updated address. Previously issued invoices are not changed automatically."
         }
       ],
-      "coverage": 0.161,
-      "unknown_terms": [
-        "different",
-        "mailbox",
-        "message",
-        "move"
-      ],
-      "latency_ms": 6.16,
+      "coverage": 1.0,
+      "unknown_terms": [],
+      "latency_ms": 5.15,
       "citation_checks": [
         {
           "source_id": "billing@v1#p1",
@@ -1397,14 +1372,14 @@
         }
       ],
       "checks": {
-        "status_matches": false,
+        "status_matches": true,
         "required_documents_present": true,
         "required_fragments_present": true,
         "required_versions_present": true,
         "no_generated_answer": true,
         "citations_match_current_documents": true
       },
-      "passed": false
+      "passed": true
     },
     {
       "id": "P04",
@@ -1412,7 +1387,7 @@
       "category": "paraphrase",
       "question": "What should my integration do when it gets throttled?",
       "expected_status": "evidence_found",
-      "observed_status": "needs_review",
+      "observed_status": "evidence_found",
       "expected_docs": [
         "api-limits"
       ],
@@ -1420,6 +1395,12 @@
         "Retry-After"
       ],
       "observed_sources": [
+        {
+          "source_id": "api-limits@v1#p1",
+          "doc_id": "api-limits",
+          "version": 1,
+          "text": "The API rate limit is 100 requests per minute per workspace. A 429 response includes a Retry-After header in seconds. Wait for that interval before retrying. Repeated retries during the interval also count toward the limit."
+        },
         {
           "source_id": "api-errors@v1#p1",
           "doc_id": "api-errors",
@@ -1433,13 +1414,14 @@
           "text": "To rotate an API key, open Settings > API keys, select Create key, and copy the new key into your integration. Verify a successful request with the new key before revoking the old key. Only workspace administrators can create or revoke API keys."
         }
       ],
-      "coverage": 0.243,
-      "unknown_terms": [
-        "gets",
-        "throttled"
-      ],
-      "latency_ms": 5.45,
+      "coverage": 1.0,
+      "unknown_terms": [],
+      "latency_ms": 5.13,
       "citation_checks": [
+        {
+          "source_id": "api-limits@v1#p1",
+          "matches_current_document": true
+        },
         {
           "source_id": "api-errors@v1#p1",
           "matches_current_document": true
@@ -1450,14 +1432,14 @@
         }
       ],
       "checks": {
-        "status_matches": false,
-        "required_documents_present": false,
-        "required_fragments_present": false,
+        "status_matches": true,
+        "required_documents_present": true,
+        "required_fragments_present": true,
         "required_versions_present": true,
         "no_generated_answer": true,
         "citations_match_current_documents": true
       },
-      "passed": false
+      "passed": true
     },
     {
       "id": "P05",
@@ -1465,7 +1447,7 @@
       "category": "paraphrase",
       "question": "How can I avoid handling the same callback twice?",
       "expected_status": "evidence_found",
-      "observed_status": "needs_review",
+      "observed_status": "evidence_found",
       "expected_docs": [
         "webhooks"
       ],
@@ -1481,14 +1463,9 @@
           "text": "HarborDesk signs webhook requests using HMAC-SHA256 in the X-Harbor-Signature header. Verify the signature against the raw request body with your webhook secret. Failed webhook deliveries are retried up to 3 times over 15 minutes. Use the event ID to avoid processing a duplicate event."
         }
       ],
-      "coverage": 0.161,
-      "unknown_terms": [
-        "callback",
-        "handling",
-        "same",
-        "twice"
-      ],
-      "latency_ms": 5.62,
+      "coverage": 1.0,
+      "unknown_terms": [],
+      "latency_ms": 5.05,
       "citation_checks": [
         {
           "source_id": "webhooks@v1#p1",
@@ -1496,14 +1473,14 @@
         }
       ],
       "checks": {
-        "status_matches": false,
+        "status_matches": true,
         "required_documents_present": true,
         "required_fragments_present": true,
         "required_versions_present": true,
         "no_generated_answer": true,
         "citations_match_current_documents": true
       },
-      "passed": false
+      "passed": true
     },
     {
       "id": "V01",
@@ -1528,7 +1505,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 4.72,
+      "latency_ms": 4.8,
       "citation_checks": [
         {
           "source_id": "api-limits@v2#p1",

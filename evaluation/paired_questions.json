@@ -1,0 +1,66 @@
+{
+  "description": "Ten synthetic paired questions fixed before the retrieval revision was implemented. These are agent-authored regression checks, not customer traffic, human labels, or a blind generalization benchmark. The original 29 questions and their expected labels remain unchanged.",
+  "status_definition": "These checks assess evidence retrieval and abstention with the model disabled. They do not measure generated-answer correctness or semantic citation support.",
+  "cases": [
+    {
+      "id": "PAIR01", "category": "export_validity",
+      "question": "How long is the export download link valid?",
+      "expected_status": "evidence_found", "expected_docs": ["export"],
+      "expected_text": ["Download links expire after 24 hours."]
+    },
+    {
+      "id": "PAIR02", "category": "unsupported_export_format",
+      "question": "Can I download exported tickets as JSON?",
+      "expected_status": "needs_review", "expected_docs": ["export"], "expected_text": [],
+      "reason": "The guide describes CSV; the normalization must preserve the unsupported JSON request."
+    },
+    {
+      "id": "PAIR03", "category": "documented_export_format",
+      "question": "How can I export tickets as CSV?",
+      "expected_status": "evidence_found", "expected_docs": ["export"], "expected_text": ["CSV archive"]
+    },
+    {
+      "id": "PAIR04", "category": "key_rotation",
+      "question": "How can I replace my API key without downtime?",
+      "expected_status": "evidence_found", "expected_docs": ["api-keys"],
+      "expected_text": ["Verify a successful request with the new key before revoking the old key."],
+      "reason": "The document describes the ordered replacement procedure, not a contractual uptime guarantee."
+    },
+    {
+      "id": "PAIR05", "category": "rate_limit",
+      "question": "What should I do if API requests are being throttled?",
+      "expected_status": "evidence_found", "expected_docs": ["api-limits"],
+      "expected_text": ["Retry-After", "Wait for that interval before retrying."]
+    },
+    {
+      "id": "PAIR06", "category": "unsupported_refund",
+      "question": "Can I get a refund after being rate limited?",
+      "expected_status": "needs_review", "expected_docs": ["api-limits"], "expected_text": [],
+      "reason": "Rate limits are documented, but refunds are not."
+    },
+    {
+      "id": "PAIR07", "category": "unsupported_refund",
+      "question": "Can I get a refund after 30 days?",
+      "expected_status": "needs_review", "expected_docs": [], "expected_text": [],
+      "reason": "An incidental time span does not turn a refund question into a retention-policy conflict."
+    },
+    {
+      "id": "PAIR08", "category": "retention_conflict",
+      "question": "Is retention after closure 30 or 90 days?",
+      "expected_status": "conflict", "expected_docs": ["retention-guide", "retention-policy"],
+      "expected_text": ["30 days", "90 days"]
+    },
+    {
+      "id": "PAIR09", "category": "invitation",
+      "question": "How do I invite a coworker to the team?",
+      "expected_status": "evidence_found", "expected_docs": ["members"],
+      "expected_text": ["invite team members"]
+    },
+    {
+      "id": "PAIR10", "category": "webhook_duplicates",
+      "question": "How do I avoid processing duplicate callbacks?",
+      "expected_status": "evidence_found", "expected_docs": ["webhooks"],
+      "expected_text": ["event ID", "duplicate event"]
+    }
+  ]
+}

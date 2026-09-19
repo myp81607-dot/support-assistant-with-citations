@@ -8,7 +8,8 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field, model_validator
 
-from .model import ModelFailure, Ollama
+from .model import ModelFailure, ChatCompletions
+from .documents import Document, DocUpdate
 from .retrieval import retrieve, suspicious, tokens
 from .store import Store
 
@@ -41,32 +42,27 @@ class TicketUpdate(BaseModel):
         return self
 
 
-class DocUpdate(BaseModel):
-    text: str = Field(min_length=10, max_length=6000)
-    fact_key: str = Field(default="", max_length=80, pattern=r"^[a-z0-9_]*$")
-    fact_value: str = Field(default="", max_length=120)
-    expected_version: int = Field(ge=1)
+class DraftReview(BaseModel):
+    decision: Literal["approved", "rejected"]
+    note: str = Field(min_length=3, max_length=2000)
+    support_checked: bool = False
 
     @model_validator(mode="after")
-    def check_fact(self):
-        self.text, self.fact_value = self.text.strip(), self.fact_value.strip()
-        if len(self.text) < 10:
-            raise ValueError("Document text is too short.")
-        if bool(self.fact_key) != bool(self.fact_value):
-            raise ValueError("Policy key and value must both be supplied or both empty.")
-        if self.fact_value and self.fact_value.lower() not in self.text.lower():
-            raise ValueError("The policy value must also appear in the document text.")
+    def check_note(self):
+        if len(self.note.strip()) < 3:
+            raise ValueError("Add a short review note.")
         return self
 
 
 def create_app(db_path=None, model=None):
-    app = FastAPI(title="HarborDesk support workspace", version="1.0.0")
-    store = Store(db_path or os.environ.get("SUPPORT_DB", "runtime/support.db"))
+    app = FastAPI(title="HarborDesk support workspace", version="1.1.0")
+    store = Store(db_path or os.environ.get("SUPPORT_DB", "runtime/support.db"), os.environ.get("SUPPORT_DOCUMENTS"))
     app.state.store = store
     if model is None and os.environ.get("SUPPORT_MODEL"):
-        model = Ollama(os.environ["SUPPORT_MODEL"], os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434"),
-                       int(os.environ.get("MODEL_MAX_CALLS", "10")))
-    mode = "ollama" if model else "evidence"
+        model = ChatCompletions(os.environ["SUPPORT_MODEL"], os.environ.get("SUPPORT_API_KEY", ""),
+                               os.environ.get("SUPPORT_API_BASE", "https://api.deepseek.com"),
+                               int(os.environ.get("MODEL_MAX_CALLS", "10")))
+    mode = "answer" if model else "evidence"
 
     @app.middleware("http")
     async def same_origin_writes(request: Request, call_next):
@@ -78,12 +74,20 @@ def create_app(db_path=None, model=None):
 
     @app.get("/api/overview")
     def overview():
-        return {"mode": mode, "model_verified": False, "documents": len(store.documents()),
+        return {"mode": mode, "model_verified": False, "model_name": model.model if model else None,
+                "model_requests": model.calls if model else 0, "documents": len(store.documents()),
                 "open_tickets": sum(t["status"] != "resolved" for t in store.tickets())}
 
     @app.get("/api/documents")
     def documents():
         return store.documents()
+
+    @app.post("/api/documents")
+    def new_document(body: Document):
+        try:
+            return store.add_document(body.model_dump())
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
 
     @app.get("/api/documents/{doc_id}/history")
     def history(doc_id: str):
@@ -112,6 +116,8 @@ def create_app(db_path=None, model=None):
         result = {"question": body.question, "mode": mode, "retrieval": sources, "conflicts": conflicts,
                   "coverage": round(coverage, 3), "unknown_terms": unknown_terms,
                   "blocked_documents": blocked, "claims": [], "generated_answer": None,
+                  "citation_validation": "not_applicable", "support_validation": "not_assessed",
+                  "review": {"status": "not_applicable"}, "usage": {},
                   "revision_label": ", ".join(dict.fromkeys(f'{s["doc_id"]} v{s["version"]}' for s in sources))}
         if suspicious(body.question):
             result.update(status="unsafe_request", reason="This request includes an instruction override or secret request. It was not executed; a person can review it.")
@@ -123,13 +129,35 @@ def create_app(db_path=None, model=None):
             result.update(status="evidence_found", reason="Relevant document excerpts found. No language model was called. Verify the excerpts answer your question; hand off if they do not.")
         else:
             try:
-                result["claims"] = model.select(body.question, sources)
-                result["generated_answer"] = "\n\n".join(f'{c["text"]} [{c["source_id"]}]' for c in result["claims"])
-                result.update(status="model_quotes", reason="Model-selected quotations match their cited paragraphs exactly. Relevance still needs human review; no free-form policy answer is accepted.")
+                draft = model.draft(body.question, sources)
+                result["claims"] = draft["claims"]
+                result["generated_answer"] = "\n\n".join(c["text"] + " " + " ".join(
+                    f'[{citation["source_id"]}]' for citation in c["citations"]) for c in result["claims"])
+                result.update(status="draft_ready", reason="Review the draft and its evidence before using it as a customer reply.",
+                              citation_validation="passed", support_validation="human_review_required",
+                              review={"status": "pending"}, usage=draft["usage"], model=draft["model"])
             except ModelFailure as exc:
                 result.update(status=exc.status, reason=exc.message)
         result["elapsed_ms"] = round((time.perf_counter() - start) * 1000, 2)
         return store.save_query(result)
+
+    @app.post("/api/queries/{query_id}/review")
+    def review_draft(query_id: int, body: DraftReview):
+        try:
+            return store.review_query(query_id, body.decision, body.note.strip(), body.support_checked)
+        except KeyError:
+            raise HTTPException(404, "Question not found.") from None
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
+
+    @app.get("/api/queries/{query_id}/reply")
+    def copy_reply(query_id: int):
+        try:
+            return {"reply": store.approved_reply(query_id)}
+        except KeyError:
+            raise HTTPException(404, "Question not found.") from None
+        except ValueError as exc:
+            raise HTTPException(409, str(exc)) from None
 
     @app.post("/api/tickets")
     def new_ticket(body: NewTicket):
