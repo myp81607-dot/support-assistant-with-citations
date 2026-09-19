@@ -13,8 +13,8 @@
 Python 3.11+，本次在 Windows / Python 3.14 实测。默认无需密钥、Docker、向量库或下载模型。
 
 ~~~bash
-git clone https://github.com/myp81607-dot/ai-assistant-evaluation-demo.git
-cd ai-assistant-evaluation-demo
+git clone https://github.com/myp81607-dot/support-assistant-with-citations.git
+cd support-assistant-with-citations
 python -m venv .venv
 # macOS / Linux:
 source .venv/bin/activate
