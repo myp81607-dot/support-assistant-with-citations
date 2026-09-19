@@ -6,7 +6,7 @@
 
 **这是合成资料的个人演示，不是付费客户项目。** HarborDesk 为虚构公司。默认已实现的是**检索、原文引文和人工交接**，不调用大语言模型，不冒充生成式回答。可选本地 Ollama 接口完成传输模拟测试，**尚未验证真实模型**。
 
-![真实运行：问题、原文与版本](docs/screenshots/01-evidence.png)
+![真实运行：问题、原文与版本](docs/screenshots/01-evidence.jpg)
 
 ## 五分钟启动
 
@@ -36,9 +36,9 @@ python -m uvicorn support_app.main:create_app --factory --host 127.0.0.1 --port 
 
 在 **Handoff queue** 中填写调查说明、改为 In progress，最后填写处理结果并标为 Resolved。不会发邮件或写 CRM。对同一条查询重复创建工单会返回同一工单；旧工单保留当时的来源版本。
 
-![真实运行：冲突需要人工判断](docs/screenshots/02-conflict.png)
+![真实运行：冲突需要人工判断](docs/screenshots/02-conflict.jpg)
 
-![真实运行：本地工单及处理记录](docs/screenshots/03-handoff.png)
+![真实运行：本地工单及处理记录](docs/screenshots/03-handoff.jpg)
 
 ## 工作原理
 

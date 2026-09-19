@@ -46,12 +46,12 @@ The first independent diagnostic run exposed “Can I export tickets as a JSON a
 
 All captures came from the running FastAPI app, using a separate browser tab and synthetic local SQLite database. They are screenshots of actual actions, not generated success mockups.
 
-1. Ask about API-key rotation; inspect the original instructions and versioned sources: [evidence](screenshots/01-evidence.png).
-2. Ask whether retention is 30 or 90 days; see the disagreement and both sources: [conflict](screenshots/02-conflict.png).
-3. Create a local ticket, set In progress, save a policy-investigation note, reopen it: [handoff](screenshots/03-handoff.png).
-4. Change the API limit from 100 to 200 requests/minute in the editor, save v2: [editor](screenshots/04-version-editor.png).
-5. Ask the API-limit question again and see 200 with `api-limits@v2#p1`: [updated evidence](screenshots/05-updated-evidence.png).
-6. Ask for a refund after 30 days; see the explicit review state: [missing information](screenshots/06-insufficient-evidence.png).
+1. Ask about API-key rotation; inspect the original instructions and versioned sources: [evidence](screenshots/01-evidence.jpg).
+2. Ask whether retention is 30 or 90 days; see the disagreement and both sources: [conflict](screenshots/02-conflict.jpg).
+3. Create a local ticket, set In progress, save a policy-investigation note, reopen it: [handoff](screenshots/03-handoff.jpg).
+4. Change the API limit from 100 to 200 requests/minute in the editor, save v2: [editor](screenshots/04-version-editor.jpg).
+5. Ask the API-limit question again and see 200 with `api-limits@v2#p1`: [updated evidence](screenshots/05-updated-evidence.jpg).
+6. Ask for a refund after 30 days; see the explicit review state: [missing information](screenshots/06-insufficient-evidence.jpg).
 
 The browser reported no console errors during the walkthrough. Functional tests also verify resolution notes and persistence across application restart. A continuous demo video was not recorded; the reproducible walkthrough and real screenshots are supplied instead.
 

@@ -6,7 +6,7 @@ A support agent at a small B2B software company needs to answer a customer quest
 
 **Personal demonstration using synthetic business documents. Not paid client work.** HarborDesk is fictional. The working default is **retrieval + quotations + human handoff**. No language model is called in that mode. The optional local Ollama interface has transport tests; a real model has **not** been validated.
 
-![A real run: question and versioned evidence](docs/screenshots/01-evidence.png)
+![A real run: question and versioned evidence](docs/screenshots/01-evidence.jpg)
 
 ## Try it in five minutes
 
@@ -36,9 +36,9 @@ Open **http://127.0.0.1:8123**. First start seeds 13 synthetic documents into `r
 
 In **Handoff queue**, add an investigation note, move a ticket to In progress, and resolve it with a note. Nothing is emailed or sent to a CRM. Repeated handoff of the same query returns the same ticket. Ticket evidence keeps the version seen at question time, even after document updates.
 
-![A real run: conflicting policies](docs/screenshots/02-conflict.png)
+![A real run: conflicting policies](docs/screenshots/02-conflict.jpg)
 
-![A real run: local ticket with review notes](docs/screenshots/03-handoff.png)
+![A real run: local ticket with review notes](docs/screenshots/03-handoff.jpg)
 
 ## How it works
 
@@ -119,4 +119,3 @@ The baseline uses character TF-IDF and inserts the top result into fixed Chinese
 The new application, corpus, UI, and tests were developed for this portfolio with AI assistance. No code, prompts, data, or assets were copied from the reference projects. [Reference notes](docs/references.md) record upstream licenses and the design ideas used: inspectable sources, explicit abstention, and human escalation.
 
 **Portfolio sentence:** A local support workspace that turns product-document searches into versioned evidence and trackable human handoffs, with reproducible failure cases and an optional, unverified local-model adapter.
-
