@@ -1,5 +1,5 @@
 {
-  "generated_at_utc": "2026-09-19T06:34:23+00:00",
+  "generated_at_utc": "2026-09-19T13:35:07+00:00",
   "label_provenance": "Synthetic questions authored by a separate coding agent after reading the implemented app and sample documents. These are not human-expert labels, customer traffic, or evidence of LLM answer accuracy. The held_out subset was authored after implementation and its labels are not tuned to observed results. The held_out failures were subsequently inspected during implementation fixes; final results are diagnostic, not a blind generalization estimate.",
   "status_definition": "evidence_found requests useful source excerpts, not a correct generated answer. needs_review requests abstention when the requested fact is absent. Expected documents and text fragments check retrieval usefulness only.",
   "execution": "Fresh temporary SQLite database per case; FastAPI TestClient; model disabled. No network or real model calls.",
@@ -30,8 +30,8 @@
       "conflict": 2,
       "unsafe_request": 3
     },
-    "median_request_latency_ms": 5.51,
-    "max_request_latency_ms": 7.29
+    "median_request_latency_ms": 6.02,
+    "max_request_latency_ms": 7.89
   },
   "by_category": {
     "conflict": {
@@ -182,7 +182,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 7.29,
+      "latency_ms": 7.1,
       "citation_checks": [
         {
           "source_id": "api-keys@v1#p1",
@@ -227,7 +227,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.38,
+      "latency_ms": 5.48,
       "citation_checks": [
         {
           "source_id": "api-errors@v1#p1",
@@ -267,7 +267,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.46,
+      "latency_ms": 5.8,
       "citation_checks": [
         {
           "source_id": "api-limits@v1#p1",
@@ -307,7 +307,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.07,
+      "latency_ms": 5.52,
       "citation_checks": [
         {
           "source_id": "export@v1#p1",
@@ -348,7 +348,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 4.76,
+      "latency_ms": 5.37,
       "citation_checks": [
         {
           "source_id": "sso@v1#p1",
@@ -388,7 +388,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.88,
+      "latency_ms": 5.3,
       "citation_checks": [
         {
           "source_id": "members@v1#p1",
@@ -435,7 +435,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.26,
+      "latency_ms": 7.89,
       "citation_checks": [
         {
           "source_id": "billing@v1#p1",
@@ -479,7 +479,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 6.0,
+      "latency_ms": 5.57,
       "citation_checks": [
         {
           "source_id": "support-hours@v1#p1",
@@ -520,7 +520,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.42,
+      "latency_ms": 6.03,
       "citation_checks": [
         {
           "source_id": "import@v1#p1",
@@ -561,7 +561,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.51,
+      "latency_ms": 6.05,
       "citation_checks": [
         {
           "source_id": "webhooks@v1#p1",
@@ -615,7 +615,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 6.2,
+      "latency_ms": 5.37,
       "citation_checks": [
         {
           "source_id": "api-errors@v1#p1",
@@ -671,7 +671,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.23,
+      "latency_ms": 6.14,
       "citation_checks": [
         {
           "source_id": "export@v1#p1",
@@ -714,7 +714,7 @@
         "provisioning",
         "scim"
       ],
-      "latency_ms": 5.24,
+      "latency_ms": 5.79,
       "citation_checks": [
         {
           "source_id": "sso@v1#p1",
@@ -760,7 +760,7 @@
       "unknown_terms": [
         "json"
       ],
-      "latency_ms": 5.83,
+      "latency_ms": 6.54,
       "citation_checks": [
         {
           "source_id": "export@v1#p1",
@@ -811,7 +811,7 @@
         "delay",
         "exponential"
       ],
-      "latency_ms": 5.5,
+      "latency_ms": 6.67,
       "citation_checks": [
         {
           "source_id": "api-limits@v1#p1",
@@ -873,7 +873,7 @@
         "deleted",
         "restored"
       ],
-      "latency_ms": 5.55,
+      "latency_ms": 5.91,
       "citation_checks": [
         {
           "source_id": "closure@v1#p1",
@@ -924,7 +924,7 @@
         "monthly",
         "price"
       ],
-      "latency_ms": 5.76,
+      "latency_ms": 6.12,
       "citation_checks": [
         {
           "source_id": "sso@v1#p1",
@@ -966,7 +966,7 @@
       "unknown_terms": [
         "guaranteed"
       ],
-      "latency_ms": 5.74,
+      "latency_ms": 6.02,
       "citation_checks": [
         {
           "source_id": "support-hours@v1#p1",
@@ -1016,7 +1016,7 @@
       "unknown_terms": [
         "period"
       ],
-      "latency_ms": 5.52,
+      "latency_ms": 6.33,
       "citation_checks": [
         {
           "source_id": "retention-guide@v1#p1",
@@ -1068,7 +1068,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.6,
+      "latency_ms": 6.03,
       "citation_checks": [
         {
           "source_id": "retention-guide@v1#p1",
@@ -1108,7 +1108,7 @@
         "reveal",
         "system"
       ],
-      "latency_ms": 5.62,
+      "latency_ms": 6.02,
       "citation_checks": [],
       "checks": {
         "status_matches": true,
@@ -1155,7 +1155,7 @@
         "show",
         "variable"
       ],
-      "latency_ms": 5.75,
+      "latency_ms": 6.66,
       "citation_checks": [
         {
           "source_id": "api-keys@v1#p1",
@@ -1222,7 +1222,7 @@
         "private",
         "shell"
       ],
-      "latency_ms": 5.66,
+      "latency_ms": 6.39,
       "citation_checks": [
         {
           "source_id": "import@v1#p1",
@@ -1280,7 +1280,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.04,
+      "latency_ms": 5.92,
       "citation_checks": [
         {
           "source_id": "api-keys@v1#p1",
@@ -1324,7 +1324,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.62,
+      "latency_ms": 5.86,
       "citation_checks": [
         {
           "source_id": "members@v1#p1",
@@ -1364,7 +1364,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.15,
+      "latency_ms": 5.67,
       "citation_checks": [
         {
           "source_id": "billing@v1#p1",
@@ -1416,7 +1416,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.13,
+      "latency_ms": 6.03,
       "citation_checks": [
         {
           "source_id": "api-limits@v1#p1",
@@ -1465,7 +1465,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 5.05,
+      "latency_ms": 6.27,
       "citation_checks": [
         {
           "source_id": "webhooks@v1#p1",
@@ -1505,7 +1505,7 @@
       ],
       "coverage": 1.0,
       "unknown_terms": [],
-      "latency_ms": 4.8,
+      "latency_ms": 5.0,
       "citation_checks": [
         {
           "source_id": "api-limits@v2#p1",

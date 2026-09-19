@@ -4,6 +4,8 @@ For a small software support team that answers the same product questions from s
 
 [Watch the 35-second search and handoff demo](docs/demo.webm) · [中文](README.zh-CN.md) · [What was tested](docs/validation.md)
 
+Verified code: [`ba30792`](https://github.com/myp81607-dot/support-assistant-with-citations/commit/ba307920087e0e9fd7cb69cda7ac7a151fa97770), Ubuntu 24.04.5 / Python 3.14.3. One complete `python -m pytest -q` run: **73 passed**. `python -m evaluation.run`: **29/29**. [Successful GitHub Actions run](https://github.com/myp81607-dot/support-assistant-with-citations/actions/runs/35446219186). These are fixed, previously seen regression cases; real model requests remain **0**.
+
 Question → sources → draft → operator review → copy or handoff.
 
 This is a personal project using a fictional company and synthetic policies. It runs without a model as a document-search tool. The DeepSeek adapter and approval flow have been tested with simulated HTTP responses; live model answers have not yet been tested. It never sends a customer message or changes an account.

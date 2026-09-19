@@ -4,6 +4,8 @@
 
 [查看 35 秒检索与交接演示](docs/demo.webm) · [English](README.md) · [实际验证情况](docs/validation.md)
 
+被测代码：[`ba30792`](https://github.com/myp81607-dot/support-assistant-with-citations/commit/ba307920087e0e9fd7cb69cda7ac7a151fa97770)，Ubuntu 24.04.5 / Python 3.14.3。一次完整执行 `python -m pytest -q`：**73 项通过**；`python -m evaluation.run`：**29/29**。[GitHub Actions 成功记录](https://github.com/myp81607-dot/support-assistant-with-citations/actions/runs/35446219186)。这是固定、已见样例的回归结果，真实模型请求仍为 **0**。
+
 问题 → 查资料 → 写草稿 → 人工核对 → 复制或交接。
 
 这是虚构公司、合成政策的个人项目。无需模型即可作为文档检索工具使用。DeepSeek 接口适配和审核流程已用模拟 HTTP 响应验证，尚未实测真实模型回答。程序不会发送客户消息，也不能操作客户账号。

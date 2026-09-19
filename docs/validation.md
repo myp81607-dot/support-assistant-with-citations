@@ -1,15 +1,19 @@
 # Validation
 
-Updated 2026-09-19. Windows, Python 3.14.3, FastAPI 0.135.1. All data is synthetic. Local retrieval and application workflows have been exercised; live DeepSeek requests are **0**. Generated-answer quality, semantic citation support, live-model latency, and inference cost have not been measured. Paid verification is awaiting authorization.
+Updated 2026-09-19. All data is synthetic. Complete local and GitHub Actions runs passed; live DeepSeek requests are **0**. Generated-answer quality, semantic citation support, live-model latency, and inference cost have not been measured. Paid verification is awaiting authorization.
 
-## Local checks
+## Complete offline checks
 
-**73 tests passed across focused runs:** 28 workflow and model-transport checks, 41 retrieval checks, and 4 added conflict regressions. These were separate runs, not one reported full-suite run. To reproduce the current suite:
+**73 tests passed in one complete run**, followed by **29/29** fixed evaluation cases. This replaces the earlier record of 73 tests run in separate groups. Both commands returned exit code 0 locally and in CI:
 
 ```sh
 python -m pytest -q
 python -m evaluation.run
 ```
+
+The local run used a clean clone of [`b3cc5d0`](https://github.com/myp81607-dot/support-assistant-with-citations/commit/b3cc5d049f4b89c751b16900dbe027076b2c3a17), a new virtual environment on Windows 11 (10.0.26200, x64), and Python 3.14.3. The child process retained only required Windows variables, the virtual environment path, UTF-8 output, and a temporary directory. Model credentials/configuration, custom document paths, and database overrides were not inherited. Tests use `tmp_path`; evaluation creates one temporary SQLite database per question and reads the unchanged `evaluation/questions.json`.
+
+The [successful CI run](https://github.com/myp81607-dot/support-assistant-with-citations/actions/runs/35446219186) tested [`ba30792`](https://github.com/myp81607-dot/support-assistant-with-citations/commit/ba307920087e0e9fd7cb69cda7ac7a151fa97770), which adds only the workflow to that application code. Its single job used Ubuntu 24.04.5 / Python 3.14.3, installed `requirements-app.txt`, and ran both complete commands. FastAPI 0.135.1, Uvicorn 0.41.0, HTTPX 0.28.1, and pytest 9.0.2 were used in both environments. Each pytest run emitted two dependency deprecation warnings and no failures. CI explicitly clears `SUPPORT_MODEL`, `SUPPORT_API_KEY`, `SUPPORT_API_BASE`, and `SUPPORT_DOCUMENTS`; it uses no provider secrets and never invokes the live-answer harness. An independent agent reviewed the temporary database paths, environment isolation, workflow, and actual run logs.
 
 The workflow checks cover changed questions and sources, document versions, stale edits, persistent handoffs and notes, custom document imports, and known injection patterns. Model checks use `httpx.MockTransport`: paraphrased drafts, valid and invalid citations, malformed or incomplete output, timeout, rate limit, insufficient account funds, and the local request allowance. No fixture is a real model response.
 
@@ -30,7 +34,7 @@ The original 29 questions retain their expected labels. [Per-case results](evalu
 | Missing-information cases | 6 / 6 | Absent facts route to review |
 | Tagged-policy conflicts | 2 / 2 | Disagreement is shown without selecting a policy answer |
 | Known injection cases | 3 / 3 | The tested override requests are withheld |
-| Local request time | Median 5.51 ms; maximum 7.29 ms | One TestClient run including persistence; not a hosted SLA |
+| Local request time | Median 6.02 ms; maximum 7.89 ms | The complete Windows run above, including persistence; not a hosted SLA |
 
 The six earlier misses remain identifiable: N04 (export-link expiry), P01 (key replacement), P02 (team invitation), P03 (billing email), P04 (throttling), and P05 (duplicate callbacks). Small phrase aliases fixed their retrieval/gating behavior without changing labels. The unknown-term guard still withholds unsupported JSON-export, refund, and explicit uptime-guarantee requests. The retrieval suite and evaluator also passed with `SUPPORT_DOCUMENTS` set to the custom example: fixed regression runs explicitly use the demo corpus, independently of that setting.
 
