@@ -1,0 +1,32 @@
+name: Offline checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    env:
+      SUPPORT_MODEL: ""
+      SUPPORT_API_KEY: ""
+      SUPPORT_API_BASE: ""
+      SUPPORT_DOCUMENTS: ""
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14.3"
+      - name: Install dependencies
+        run: python -m pip install -r requirements-app.txt
+      - name: Environment
+        run: |
+          python --version
+          python -m pip show fastapi uvicorn httpx pytest
+      - name: Full test suite
+        run: python -m pytest -q
+      - name: Fixed retrieval evaluation
+        run: python -m evaluation.run
